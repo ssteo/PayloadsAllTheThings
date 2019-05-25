@@ -27,7 +27,8 @@
     ./windows-exploit-suggester.py --database 2014-06-06-mssb.xlsx --systeminfo win7sp1-systeminfo.txt 
     ```
 - [windows-privesc-check - Standalone Executable to Check for Simple Privilege Escalation Vectors on Windows Systems](https://github.com/pentestmonkey/windows-privesc-check)
-- [WindowsExploits - Windows exploits, mostly precompiled. Not being updated. ](https://github.com/abatchy17/WindowsExploits)
+- [WindowsExploits - Windows exploits, mostly precompiled. Not being updated.](https://github.com/abatchy17/WindowsExploits)
+- [WindowsEnumv - A Powershell Privilege Escalation Enumeration Script.](https://github.com/absolomb/WindowsEnum)
 - [Powerless - Windows privilege escalation (enumeration) script designed with OSCP labs (legacy Windows) in mind](https://github.com/M4ximuss/Powerless)
 - [PowerSploit's PowerUp](https://github.com/PowerShellMafia/PowerSploit)
     ```powershell
@@ -161,6 +162,12 @@ netsh firewall show state
 netsh firewall show config
 ```
 
+List firewall's blocked ports
+
+```powershell
+$f=New-object -comObject HNetCfg.FwPolicy2;$f.rules |  where {$_.action -eq "0"} | select name,applicationname,localports
+```
+
 List all network shares
 
 ```powershell
@@ -199,6 +206,8 @@ findstr /spin "password" *.*
 
 ```powershell
 dir /S /B *pass*.txt == *pass*.xml == *pass*.ini == *cred* == *vnc* == *.config*
+where /R C:\ user.txt
+where /R C:\ *.ini
 ```
 
 ### Search the registry for key names and passwords
@@ -208,6 +217,7 @@ REG QUERY HKLM /F "password" /t REG_SZ /S /K
 REG QUERY HKCU /F "password" /t REG_SZ /S /K
 
 reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" # Windows Autologin
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" 2>nul | findstr "DefaultUserName DefaultDomainName DefaultPassword" 
 reg query "HKLM\SYSTEM\Current\ControlSet\Services\SNMP" # SNMP parameters
 reg query "HKCU\Software\SimonTatham\PuTTY\Sessions" # Putty clear text proxy credentials
 reg query "HKCU\Software\ORL\WinVNC3\Password" # VNC credentials
@@ -309,6 +319,19 @@ Oneliner method to extract wifi passwords from all the access point.
 ```batch
 cls & echo. & for /f "tokens=4 delims=: " %a in ('netsh wlan show profiles ^| find "Profile "') do @echo off > nul & (netsh wlan show profiles name=%a key=clear | findstr "SSID Cipher Content" | find /v "Number" & echo.) & @echo on
 ```
+
+### Passwords stored in services
+
+Saved session information for PuTTY, WinSCP, FileZilla, SuperPuTTY, and RDP using [SessionGopher](https://github.com/Arvanaghi/SessionGopher)
+
+
+```powershell
+https://raw.githubusercontent.com/Arvanaghi/SessionGopher/master/SessionGopher.ps1
+Import-Module path\to\SessionGopher.ps1;
+Invoke-SessionGopher -AllDomain -o
+Invoke-SessionGopher -AllDomain -u domain.com\adm-arvanaghi -p s3cr3tP@ss
+```
+
 
 ## EoP - Processes Enumeration and Tasks
 
@@ -500,6 +523,12 @@ List of exploits kernel : [https://github.com/SecWiki/windows-kernel-exploits](h
 ...
 - [MS03-026](./MS03-026) 　[KB823980]　　 [Buffer Overrun In RPC Interface]　　(/NT/2000/XP/2003)  
 
+To cross compile a program from Kali, use the following command.
+
+```powershell
+Kali> i586-mingw32msvc-gcc -o adduser.exe useradd.c
+```
+
 ## EoP - AlwaysInstallElevated
 
 Check if these registry values are set to "1".
@@ -560,6 +589,7 @@ $ computer = "<hostname>"
 
 ## References
 
+* [Windows Internals Book - 02/07/2017](https://docs.microsoft.com/en-us/sysinternals/learn/windows-internals)
 * [icacls - Docs Microsoft](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/icacls)
 * [Privilege Escalation Windows - Philip Linghammar](https://xapax.gitbooks.io/security/content/privilege_escalation_windows.html)
 * [Windows elevation of privileges - Guifre Ruiz](https://guif.re/windowseop)
@@ -569,6 +599,7 @@ $ computer = "<hostname>"
 * [TOP–10 ways to boost your privileges in Windows systems - hackmag](https://hackmag.com/security/elevating-privileges-to-administrative-and-further/)
 * [The SYSTEM Challenge](https://decoder.cloud/2017/02/21/the-system-challenge/)
 * [Windows Privilege Escalation Guide - absolomb's security blog](https://www.absolomb.com/2018-01-26-Windows-Privilege-Escalation-Guide/)
+* [Chapter 4 - Windows Post-Exploitation - 2 Nov 2017 - dostoevskylabs](https://github.com/dostoevskylabs/dostoevsky-pentest-notes/blob/master/chapter-4.md)
 * [Remediation for Microsoft Windows Unquoted Service Path Enumeration Vulnerability - September 18th, 2016 - Robert Russell](https://www.tecklyfe.com/remediation-microsoft-windows-unquoted-service-path-enumeration-vulnerability/)
 * [Pentestlab.blog - WPE-01 - Stored Credentials](https://pentestlab.blog/2017/04/19/stored-credentials/)
 * [Pentestlab.blog - WPE-02 - Windows Kernel](https://pentestlab.blog/2017/04/24/windows-kernel-exploits/)
@@ -583,3 +614,4 @@ $ computer = "<hostname>"
 * [Pentestlab.blog - WPE-11 - Secondary Logon Handle](https://pentestlab.blog/2017/04/07/secondary-logon-handle/)
 * [Pentestlab.blog - WPE-12 - Insecure Registry Permissions](https://pentestlab.blog/2017/03/31/insecure-registry-permissions/)
 * [Pentestlab.blog - WPE-13 - Intel SYSRET](https://pentestlab.blog/2017/06/14/intel-sysret/)
+* [Alternative methods of becoming SYSTEM - 20th November 2017 - Adam Chester @_xpn_](https://blog.xpnsec.com/becoming-system/)

